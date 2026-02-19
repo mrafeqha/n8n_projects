@@ -1,0 +1,206 @@
+{
+  "name": "Calender",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "cc224e54-55ab-4fd5-9f84-359ebacbc1b6",
+      "name": "Telegram Trigger",
+      "webhookId": "551d65f2-9574-40b0-8178-fafc6d3dc50b"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "You are an email and reminder scheduling agent.\n\nIncoming Telegram messages may request ONE of the following actions:\n1) Get emails\n2) Send an email\n3) Set a calendar reminder\n\nYou MUST first identify the user’s intent based on the message content and execute ONLY the requested action.\n\nINTENT RULES:\n\n1) GET EMAILS\nIf the message asks to read, check, fetch, or get emails:\n- Retrieve emails using the available email tool.\n- Do NOT send emails.\n- Do NOT create calendar events.\n\n2) SEND EMAIL\nIf the message asks to send an email and contains an email address:\n- Generate and send an email using the provided message text.\n- Do NOT create a calendar event unless the message explicitly asks to set a reminder.\n\n3) SET CALENDAR REMINDER\nIf the message asks to set a reminder and contains a date written in human-readable form (for example: \"23 june 2026\"):\n- Extract the date.\n- Create exactly ONE Google Calendar event on the extracted date.\n- The reminder must be set on that date, not the current date.\n\nTIME HANDLING:\n- If a time is mentioned, use it.\n- If no time is mentioned, set the event from 9:00 AM to 10:00 AM local time.\n\nCALENDAR EVENT REQUIREMENTS:\n- Use the extracted date.\n- Include a clear and relevant title based on the message.\n- Include exactly one alarm-style reminder (notification).\n\nEXECUTION RULES:\n- Execute only the action explicitly requested.\n- Do not combine actions unless the user clearly asks for multiple actions.\n- Do not explain your actions.\n- Do not ask questions.\n- Execute all actions using the available tools only."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "69c8ab03-2a0c-447a-931b-45a2405a4c7e",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        208
+      ],
+      "id": "d716a642-19eb-4a33-972e-3d6176762664",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Limit', ``, 'number') }}",
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        224
+      ],
+      "id": "edc21b9c-e675-4701-8cc6-47cca07ab1ed",
+      "name": "Get many messages in Gmail",
+      "webhookId": "b5d14782-0a17-41a3-877e-172d08b1b83c"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        560,
+        0
+      ],
+      "id": "a5ad8791-2d9a-4af5-b428-6b98edef8d74",
+      "name": "Send a text message",
+      "webhookId": "e9efb652-2229-42de-93a7-dff198594398"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        368,
+        208
+      ],
+      "id": "8ebf7de7-4f67-4d50-8aa6-4206dca5e11c",
+      "name": "Send a message in Gmail",
+      "webhookId": "840b4773-f576-451c-8acd-c7b3b6f65730"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        512,
+        352
+      ],
+      "id": "b743dab6-3b75-46f0-bf07-2ddefc76bb5e",
+      "name": "Create an event in Google Calendar"
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "580f2862-7ca7-4f1f-b8ed-ae67ab2f50eb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "56b2d362bdbf7eb4386563246a76c47a978f2ae5aeca951ae28023d6db5a9688"
+  },
+  "id": "99DccKEtE1zNmm9s",
+  "tags": []
+}

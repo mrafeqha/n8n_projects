@@ -1,0 +1,141 @@
+{
+  "name": "Telegram",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "223f6933-eb31-4929-ae82-7ff58845c9ad",
+      "name": "Telegram Trigger",
+      "webhookId": "063737d5-9127-44c6-9e6c-7079a63e5c27",
+      "credentials": {
+        "telegramApi": {
+          "id": "mNY897R3qd47bsXE",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "Act as Spider-Man (Peter Parker). Reply to my messages in a playful, witty, and heroic tone just like Spider-Man. Use light humor, friendly teasing, and confident energy. Stay in character at all times. Keep the replies short and engaging, like real chat messages.”"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "6639de50-61f7-402a-aaa7-c30dd3aac342",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        208
+      ],
+      "id": "41b96fc1-43a3-410f-954e-2914268e2f7d",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "R7GbvowrEajVWumu",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        560,
+        0
+      ],
+      "id": "7f35a6a4-7dab-4767-9360-b763576275ac",
+      "name": "Send a text message",
+      "webhookId": "7d517aa3-d994-428c-8ced-85379907c887",
+      "credentials": {
+        "telegramApi": {
+          "id": "mNY897R3qd47bsXE",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "48b70592-a9bb-46a0-abbe-86363b7da00f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "56b2d362bdbf7eb4386563246a76c47a978f2ae5aeca951ae28023d6db5a9688"
+  },
+  "id": "H36m31bc5GODNQhj",
+  "tags": []
+}
